@@ -10,7 +10,7 @@ const send_zong_otp = async (ata) => {
 
         // Prepare query params
         const params = {
-            msisdn: 92 + phone.slice(1),       // e.g., "923159178387"
+            msisdn: phone,       // e.g., "923159178387"
             carrier: "zong",
             traceID: "njhkjkj"     // carrier name
         };
