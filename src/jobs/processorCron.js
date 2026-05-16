@@ -3,11 +3,14 @@ const db = require('../db');
 
 async function fetchProcessorCount() {
   try {
-    const query = `SELECT COUNT(*) AS count FROM processor
+    const query = `SELECT *  FROM processor
       WHERE status = 0
         AND created_at >= NOW() - INTERVAL 1 HOUR`;
     const [rows] = await db.execute(query);
     const count = rows[0]?.count ?? 0;
+
+
+    console.log("rows", rows);
     console.log(new Date().toISOString(), 'Processor numbers last hour with status 0:', count);
   } catch (error) {
     console.error('Error fetching processor count:', error);
