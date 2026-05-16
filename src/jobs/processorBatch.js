@@ -29,7 +29,7 @@ const processBatch = async (batch, batchIndex, totalBatches) => {
         if (row?.msisdn) {
             const alreadySubscribed = await isWeatherSubscriber(row?.msisdn);
             if (alreadySubscribed) {
-                console.log(`Skipping row ${row.id}: ${row.msisn} is already a subscriber in WeatherWalay.`);
+                console.log(`Skipping row ${row.id}: ${row.msisdn} is already a subscriber in WeatherWalay.`);
                 continue;
             }
 
