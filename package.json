@@ -1,0 +1,20 @@
+{
+  "name": "zong-mak-consumer",
+  "version": "0.1.0",
+  "description": "Node.js backend for fetching processor numbers from MySQL on an hourly schedule.",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "cron": "node src/jobs/processorCron.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.3.1",
+ "express": "^4.18.2",
+    "mysql2": "^3.5.2",
+    "node-cron": "^3.0.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  }
+}

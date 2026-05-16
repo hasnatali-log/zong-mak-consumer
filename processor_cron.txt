@@ -1,0 +1,2 @@
+# Run fetch_processor_numbers.sh at the top of every hour
+0 * * * * /d/wwDev/zong-mak-consumer/fetch_processor_numbers.sh >> /var/log/processor_fetch.log 2>&1
