@@ -9,7 +9,7 @@ const getPackageType = (networkType) => (networkType === 'postpaid' ? 3 : 1);
 
 const processProcessorRow = async (row) => {
   try {
-    const clientele = await checkZongNum({ cellno: row.msisn, subDomain: row.sub_domain });
+    const clientele = await checkZongNum({ cellno: row.msisdn, subDomain: row.sub_domain });
     console.log(`Processor row ${row.id} (${row.msisn}) Zong check result:`, clientele);
 
     if (!clientele?.success || clientele?.carrier !== 'zong') {
