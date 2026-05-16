@@ -58,6 +58,15 @@ const subscribe_zong_num = async (params) => {
         );
 
         // Check 
+        const auser = await alreadySubCheck({ ...params, api: "subscribe" });
+        if (auser?.success) {
+            if (auser?.under_process)
+                return {
+                    success: false,
+                    msg: "This user is already subscribed",
+                    record: { phone: cellno, isSubscribed: true },
+                };
+        }
 
 
         const response = await zongBssApi.post("/subscribe-bundle", payload);
