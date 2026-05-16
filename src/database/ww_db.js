@@ -1,5 +1,13 @@
 const mongoose = require("mongoose");
+const crypto = require("crypto");
 const { env, wwDbUri } = require("../config");
+
+if (typeof global.crypto === "undefined") {
+  global.crypto = crypto;
+}
+if (typeof globalThis.crypto === "undefined") {
+  globalThis.crypto = global.crypto;
+}
 
 //Create new mongodb instance to connect with IBM DB
 const mongoInstance = mongoose.createConnection(wwDbUri, {
