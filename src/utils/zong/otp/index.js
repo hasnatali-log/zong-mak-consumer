@@ -1,5 +1,5 @@
 const axios = require("axios");
-const { logger } = require("../../../logger");
+const { logger } = require("../../../../logger");
 
 const send_zong_otp = async (ata) => {
     try {

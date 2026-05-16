@@ -1,5 +1,5 @@
 const axios = require("axios");
-const { logger } = require("../../../logger");
+const { logger } = require("../../../../logger");
 const { Users } = require("../../../models/ww_db");
 const { prometheusEventRegister } = require("../../prom");
 const { extractSubdomain } = require("../../commons/flows");
