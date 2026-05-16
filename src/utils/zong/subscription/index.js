@@ -98,15 +98,7 @@ const subscribe_zong_num = async (params) => {
 
             console.log("Updated User: ", updatedUser?._doc?.phone, updatedUser?._doc?.status);
 
-            prometheusEventRegister("metrics/telco_api_success", {
-                api_name: "subscribe",
-                adID,
-                telco: "zong",
-                flow: flow?.flow ?? flow,
-                campaign: subDomain,
-                isHeaderEnriched,
-                status: "OK"
-            });
+
 
             if (updatedUser) {
                 updatedUser.log = undefined;
@@ -142,15 +134,7 @@ const subscribe_zong_num = async (params) => {
             msgLower.includes("already subscribed") ||
             msgLower.includes("already active")
         ) {
-            prometheusEventRegister("metrics/telco_api_success", {
-                api_name: "subscribe",
-                adID,
-                telco: "zong",
-                flow: flow?.flow ?? flow,
-                campaign: subDomain,
-                isHeaderEnriched,
-                status: "OK"
-            });
+           
 
             return {
                 success: true,
@@ -161,15 +145,7 @@ const subscribe_zong_num = async (params) => {
             };
         }
 
-        prometheusEventRegister("metrics/telco_api_success", {
-            api_name: "subscribe",
-            adID,
-            telco: "zong",
-            flow: flow?.flow ?? flow,
-            campaign: subDomain,
-            isHeaderEnriched,
-            status: "KO"
-        });
+       
 
         return {
             success: false,
@@ -225,15 +201,7 @@ const subscribe_zong_num = async (params) => {
 
             console.log("Updated User: ", updatedUser?._doc?.phone, updatedUser?._doc?.status);
 
-            prometheusEventRegister("metrics/telco_api_success", {
-                api_name: "subscribe",
-                adID,
-                telco: "zong",
-                flow: flow?.flow ?? flow,
-                campaign: subDomain,
-                isHeaderEnriched,
-                status: "OK"
-            });
+           
 
             if (updatedUser) {
                 updatedUser.log = undefined;
@@ -259,15 +227,7 @@ const subscribe_zong_num = async (params) => {
 
         }
 
-        prometheusEventRegister("metrics/telco_api_failure", {
-            api_name: "subscribe",
-            adID,
-            telco: "zong",
-            flow: flow?.flow ?? flow,
-            campaign: subDomain,
-            isHeaderEnriched,
-            status: "KO"
-        });
+       
 
         if (
             errMsg.includes("already subscribed") ||
