@@ -1,6 +1,5 @@
-const { getKey } = require("../../../database/subRedis");
 const { Users } = require("../../../models/ww_db");
-const { prometheusEventRegister } = require("../../../utils/prom");
+
 const alreadySubCheck = async (params) => {
 
     let { cellno: phone, telco, subDomain, api, adID = "none", flow = "none", isHeaderEnriched = "none" } = params;
