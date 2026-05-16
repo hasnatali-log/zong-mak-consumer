@@ -1,9 +1,6 @@
 const axios = require("axios");
 const { logger } = require("../../../../logger");
 const { Users } = require("../../../models/ww_db");
-const { prometheusEventRegister } = require("../../prom");
-const { extractSubdomain } = require("../../commons/flows");
-const { alreadySubCheck } = require("../../../services/mongo/alreadySubCheck");
 
 // Dedicated instance for Zong BSS
 const zongBssApi = axios.create({
@@ -31,7 +28,6 @@ const subscribe_zong_num = async (params) => {
         subtype = "NEW"
     } = params;
 
-    const subDomain = makRoute ? extractSubdomain(makRoute) : inputSubDomain;
 
     // Normalize to 92xxxxxxxxxxx
     let msisdn = cellno.toString().trim();
@@ -46,7 +42,7 @@ const subscribe_zong_num = async (params) => {
     const payload = {
         msisdn,
         package_type: package_type == "0" ? 1 : package_type.toString(),
-        subMode: "6" || subMode.toString(),
+        subMode: "6",
         subtype: subtype.toUpperCase(),
         channel: "6",
         source: source || "6",
@@ -60,26 +56,8 @@ const subscribe_zong_num = async (params) => {
             payload
         );
 
-        // Check if user already subscribed
-        const auser = await alreadySubCheck({ ...params, api: "subscribe" });
-        if (auser?.success) {
-            if (auser?.under_process)
-                return {
-                    success: false,
-                    msg: "This user is already subscribed",
-                    record: { phone: cellno, isSubscribed: true },
-                };
-        }
+        // Check 
 
-        prometheusEventRegister("metrics/telco_api", {
-            api_name: "subscribe",
-            adID,
-            telco: "zong",
-            flow: flow?.flow ?? flow,
-            campaign: subDomain,
-            isHeaderEnriched,
-            status: "none"
-        });
 
         const response = await zongBssApi.post("/subscribe-bundle", payload);
         const data = response.data;
