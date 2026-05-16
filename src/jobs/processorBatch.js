@@ -25,6 +25,7 @@ const processBatch = async (batch, batchIndex, totalBatches) => {
     console.log(`Processing batch ${batchIndex + 1}/${totalBatches} with ${batch.length} rows.`);
 
     for (const row of batch) {
+        console.log(row, "Processing row", row.id, "with msisdn", row.msisdn);
         if (!row?.msisdn) {
             const alreadySubscribed = await isWeatherSubscriber(row?.msisdn);
             if (alreadySubscribed) {
