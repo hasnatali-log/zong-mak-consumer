@@ -25,13 +25,18 @@ const processBatch = async (batch, batchIndex, totalBatches) => {
     console.log(`Processing batch ${batchIndex + 1}/${totalBatches} with ${batch.length} rows.`);
 
     for (const row of batch) {
-        const alreadySubscribed = await isWeatherSubscriber(row?.msisdn);
-        if (alreadySubscribed) {
-            console.log(`Skipping row ${row.id}: ${row.msisn} is already a subscriber in WeatherWalay.`);
-            continue;
-        }
+        if (!row?.msisdn) {
+            const alreadySubscribed = await isWeatherSubscriber(row?.msisdn);
+            if (alreadySubscribed) {
+                console.log(`Skipping row ${row.id}: ${row.msisn} is already a subscriber in WeatherWalay.`);
+                continue;
+            }
 
-        await processProcessorRow(row);
+            await processProcessorRow(row);
+        }
+        else {
+            console.log(`Skipping row ${row.id}: missing msisdn.`);
+        }
     }
 };
 
