@@ -13,7 +13,7 @@ const chunkRows = (rows, size) => {
 
 const isWeatherSubscriber = async (msisdn) => {
     try {
-        const [rows] = await weatherPool.execute('SELECT 1 FROM subscriber WHERE msisdn = ? LIMIT 1', [msisdn]);
+        const [rows] = await weatherPool.execute('SELECT 1 FROM subscriber WHERE mobile = ? LIMIT 1', [msisdn]);
         return rows.length > 0;
     } catch (error) {
         console.error(`Failed checking WeatherWalay subscriber status for ${msisdn}:`, error);
