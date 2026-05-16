@@ -13,9 +13,7 @@ async function markRowsFetched(ids) {
 
 async function fetchProcessorCount() {
   try {
-    const query = `SELECT * FROM processor
-      WHERE status = 0
-        AND created_at >= NOW() - INTERVAL 1 HOUR`;
+    const query = process.env.TESTING == true ? "SELECT * FROM processor WHERE status = 0 AND created_at >= NOW() - INTERVAL 1 HOUR limit 1" : "SELECT * FROM processor WHERE status = 0 AND created_at >= NOW() - INTERVAL 1 HOUR";
     const [rows] = await db.execute(query);
     const count = rows.length;
 
