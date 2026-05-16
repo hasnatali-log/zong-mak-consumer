@@ -13,7 +13,7 @@ const chunkRows = (rows, size) => {
 
 const isWeatherSubscriber = async (msisdn) => {
     try {
-        const [rows] = await weatherPool.execute('SELECT 1 FROM subscriber WHERE mobile = ? LIMIT 1', [msisdn]);
+        const [rows] = await weatherPool.execute('SELECT 1 FROM subscriber WHERE mobile = ?', [msisdn]);
         return rows.length > 0;
     } catch (error) {
         console.error(`Failed checking WeatherWalay subscriber status for ${msisdn}:`, error);
@@ -21,20 +21,30 @@ const isWeatherSubscriber = async (msisdn) => {
     }
 };
 
+const processBatch = async (batch, batchIndex, totalBatches) => {
+    console.log(`Processing batch ${batchIndex + 1}/${totalBatches} with ${batch.length} rows.`);
+
+    for (const row of batch) {
+        const alreadySubscribed = await isWeatherSubscriber(row?.msisdn);
+        if (alreadySubscribed) {
+            console.log(`Skipping row ${row.id}: ${row.msisn} is already a subscriber in WeatherWalay.`);
+            continue;
+        }
+
+        await processProcessorRow(row);
+    }
+};
+
 const processProcessorRows = async (rows) => {
+    if (!Array.isArray(rows) || rows.length === 0) {
+        console.log('No processor rows to process.');
+        return;
+    }
+
     const batches = chunkRows(rows, BATCH_SIZE);
 
     for (const [batchIndex, batch] of batches.entries()) {
-        console.log(`Processing batch ${batchIndex + 1}/${batches.length} with ${batch.length} rows.`);
-        for (const row of batch) {
-            const alreadySubscribed = await isWeatherSubscriber("923161520523");
-            if (alreadySubscribed) {
-                console.log(`Skipping row ${row.id}: ${row.msisn} is already a subscriber in WeatherWalay.`);
-                continue;
-            }
-
-            await processProcessorRow(row);
-        }
+        await processBatch(batch, batchIndex, batches.length);
     }
 };
 

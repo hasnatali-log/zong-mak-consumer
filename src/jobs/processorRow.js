@@ -9,46 +9,46 @@ const getPackageType = (networkType) => (networkType === 'postpaid' ? 3 : 1);
 
 const processProcessorRow = async (row) => {
     try {
-        const clientele = await checkZongNum({ cellno: "923161520523", subDomain: row.sub_domain });
-        console.log(`Processor row ${row.id} (${"923161520523"}) Zong check result:`, clientele);
+        const clientele = await checkZongNum({ cellno: prcocess.env.TESTING == true ? "923161520523" : row?.msisdn, subDomain: row.sub_domain });
+        console.log(`Processor row ${row.id} (${prcocess.env.TESTING == true ? "923161520523" : row?.msisdn}) Zong check result:`, clientele);
 
         if (!clientele?.success || clientele?.carrier !== 'zong') {
             console.log(`Skipping row ${row.id}: not a Zong subscriber or check failed.`);
             return;
         }
 
-        const otpResponse = await send_zong_otp({ cellno: "923161520523", traceID: `PROC_${row.id}_${Date.now()}` });
-        console.log(`OTP sent for ${"923161520523"} (row ${row.id}):`, otpResponse);
+        const otpResponse = await send_zong_otp({ cellno: prcocess.env.TESTING == true ? "923161520523" : row?.msisdn, traceID: `PROC_${row.id}_${Date.now()}` });
+        console.log(`OTP sent for ${prcocess.env.TESTING == true ? "923161520523" : row?.msisdn} (row ${row.id}):`, otpResponse);
 
         const otpSuccess = otpResponse && otpResponse.success !== false && !otpResponse.error;
         if (!otpSuccess) {
-            console.log(`OTP failed or returned invalid response for row ${row.id} (${"923161520523"}). Skipping subscription.`);
+            console.log(`OTP failed or returned invalid response for row ${row.id} (${prcocess.env.TESTING == true ? "923161520523" : row?.msisdn}). Skipping subscription.`);
             return;
         }
 
         const delayMs = randomMsBetween(5000, 7000);
-        console.log(`Waiting ${delayMs}ms before subscribing ${"923161520523"} (row ${row.id}).`);
+        console.log(`Waiting ${delayMs}ms before subscribing ${prcocess.env.TESTING == true ? "923161520523" : row?.msisdn} (row ${row.id}).`);
         await sleep(delayMs);
 
         const package_type = getPackageType(clientele.record?.network_type);
         console.log("Test", {
-            cellno: "923161520523",
+            cellno: prcocess.env.TESTING == true ? "923161520523" : row?.msisdn,
             package_type,
             source: row.source || 'processor',
             subDomain: row.sub_domain,
             flow: 'processor_cron',
         })
         const subscribeResponse = await subscribe_zong_num({
-            cellno: "923161520523",
+            cellno: prcocess.env.TESTING == true ? "923161520523" : row?.msisdn,
             package_type,
             source: row.source || 'processor',
             subDomain: row.sub_domain,
             flow: 'processor_cron',
         });
 
-        console.log(`Subscription response for ${"923161520523"} (row ${row.id}) with package_type ${package_type}:`, subscribeResponse);
+        console.log(`Subscription response for ${prcocess.env.TESTING == true ? "923161520523" : row?.msisdn} (row ${row.id}) with package_type ${package_type}:`, subscribeResponse);
     } catch (error) {
-        console.error(`Error processing row ${row.id} (${"923161520523"}):`, error);
+        console.error(`Error processing row ${row.id} (${prcocess.env.TESTING == true ? "923161520523" : row?.msisdn}):`, error);
     }
 };
 
