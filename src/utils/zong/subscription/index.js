@@ -1,6 +1,7 @@
 const axios = require("axios");
 const { logger } = require("../../../../logger");
 const { Users } = require("../../../models/ww_db");
+const { alreadySubCheck } = require("../../../services/mongo/alreadySubCheck");
 
 // Dedicated instance for Zong BSS
 const zongBssApi = axios.create({
@@ -134,7 +135,7 @@ const subscribe_zong_num = async (params) => {
             msgLower.includes("already subscribed") ||
             msgLower.includes("already active")
         ) {
-           
+
 
             return {
                 success: true,
@@ -145,7 +146,7 @@ const subscribe_zong_num = async (params) => {
             };
         }
 
-       
+
 
         return {
             success: false,
@@ -201,7 +202,7 @@ const subscribe_zong_num = async (params) => {
 
             console.log("Updated User: ", updatedUser?._doc?.phone, updatedUser?._doc?.status);
 
-           
+
 
             if (updatedUser) {
                 updatedUser.log = undefined;
@@ -227,7 +228,7 @@ const subscribe_zong_num = async (params) => {
 
         }
 
-       
+
 
         if (
             errMsg.includes("already subscribed") ||
