@@ -17,10 +17,10 @@ const processProcessorRow = async (row) => {
       return;
     }
 
-    const otpResponse = await send_zong_otp({ cellno: row.msisn, traceID: `PROC_${row.id}_${Date.now()}` });
-    console.log(`OTP sent for ${row.msisn} (row ${row.id}):`, otpResponse);
+    // const otpResponse = await send_zong_otp({ cellno: row.msisn, traceID: `PROC_${row.id}_${Date.now()}` });
+    // console.log(`OTP sent for ${row.msisn} (row ${row.id}):`, otpResponse);
 
-    const otpSuccess = otpResponse && otpResponse.success !== false && !otpResponse.error;
+    const otpSuccess = otpResponse && otpResponse?.success !== false && !otpResponse.error;
     if (!otpSuccess) {
       console.log(`OTP failed or returned invalid response for row ${row.id} (${row.msisn}). Skipping subscription.`);
       return;

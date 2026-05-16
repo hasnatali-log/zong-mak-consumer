@@ -2,8 +2,6 @@ async function checkZongNum(params) {
     try {
         let { cellno: phone } = params;
         console.log("Original Phone Number: ", phone);
-        phone = phone.slice(1);
-        phone = "92" + phone;
         console.log("Checking Zong Number: ", phone);
         const response = await fetch(`http://192.168.12.177/provisioning/api/zong-bss/check-subscriber`, {
             method: "post",
