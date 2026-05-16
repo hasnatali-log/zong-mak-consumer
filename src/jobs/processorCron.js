@@ -2,6 +2,15 @@ const cron = require('node-cron');
 const db = require('../db');
 const { processProcessorRows } = require('./processorBatch');
 
+async function markRowsFetched(ids) {
+  if (!ids.length) return;
+
+  const placeholders = ids.map(() => '?').join(', ');
+  const updateQuery = `UPDATE processor SET status = 1 WHERE id IN (${placeholders})`;
+  await db.execute(updateQuery, ids);
+  console.log(`Marked ${ids.length} processor rows as fetched with status 1.`);
+}
+
 async function fetchProcessorCount() {
   try {
     const query = `SELECT * FROM processor
@@ -12,6 +21,9 @@ async function fetchProcessorCount() {
 
     console.log('rows', rows);
     console.log(new Date().toISOString(), 'Processor numbers last hour with status 0:', count);
+
+    const ids = rows.map((row) => row.id);
+    await markRowsFetched(ids);
 
     await processProcessorRows(rows);
   } catch (error) {
