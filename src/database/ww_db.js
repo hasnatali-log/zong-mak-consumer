@@ -3,7 +3,6 @@ const { env, wwDbUri } = require("../config");
 
 //Create new mongodb instance to connect with IBM DB
 const mongoInstance = mongoose.createConnection(wwDbUri, {
-  useCreateIndex: true,
 });
 
 if (env === "development") {
