@@ -36,7 +36,7 @@ const processBatch = async (batch, batchIndex, totalBatches) => {
             await processProcessorRow(row);
         }
         else {
-            console.log(`Skipping row ${row.id}: missing msisdn.`);
+            console.log(`Skipping row ${row.id}: missing msisdn-->`, row?.msisdn);
         }
     }
 };
