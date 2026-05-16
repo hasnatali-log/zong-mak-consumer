@@ -31,7 +31,7 @@ const processProcessorRow = async (row) => {
             return;
         }
 
-        const delayMs = randomMsBetween(2000, 4000);
+        const delayMs = randomMsBetween(3000, 5000);
         console.log(`Waiting ${delayMs}ms before subscribing ${cellno} (row ${row.id}).`);
         await sleep(delayMs);
 
