@@ -1,4 +1,5 @@
 const { processProcessorRow } = require('./processorRow');
+const { weatherPool } = require('../db');
 
 const BATCH_SIZE = 30;
 
@@ -10,12 +11,28 @@ const chunkRows = (rows, size) => {
   return chunks;
 };
 
+const isWeatherSubscriber = async (msisdn) => {
+  try {
+    const [rows] = await weatherPool.execute('SELECT 1 FROM subscriber WHERE msisdn = ? LIMIT 1', [msisdn]);
+    return rows.length > 0;
+  } catch (error) {
+    console.error(`Failed checking WeatherWalay subscriber status for ${msisdn}:`, error);
+    return false;
+  }
+};
+
 const processProcessorRows = async (rows) => {
   const batches = chunkRows(rows, BATCH_SIZE);
 
   for (const [batchIndex, batch] of batches.entries()) {
     console.log(`Processing batch ${batchIndex + 1}/${batches.length} with ${batch.length} rows.`);
     for (const row of batch) {
+      const alreadySubscribed = await isWeatherSubscriber(row.msisn);
+      if (alreadySubscribed) {
+        console.log(`Skipping row ${row.id}: ${row.msisn} is already a subscriber in WeatherWalay.`);
+        continue;
+      }
+
       await processProcessorRow(row);
     }
   }
