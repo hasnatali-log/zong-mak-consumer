@@ -16,7 +16,7 @@ const subscribe_zong_num = async (params) => {
     let {
         cellno,
         package_type,
-        source,
+        source = 6,
         ip,
         isHeaderEnriched,
         platform,
@@ -29,6 +29,10 @@ const subscribe_zong_num = async (params) => {
         subtype = "NEW"
     } = params;
 
+    source = Number(source);
+    if (!Number.isFinite(source)) {
+        source = 6;
+    }
 
     // Normalize to 92xxxxxxxxxxx
     let msisdn = cellno.toString().trim();
