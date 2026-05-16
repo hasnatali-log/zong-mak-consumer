@@ -48,7 +48,6 @@ const encryptZongOtp = (plainText) => {
     // Return in format "encryptedHex|ivHex"
     return `${encrypted}|${iv.toString("hex")}`;
   } catch (error) {
-    console.error("Encryption failed:", error.message);
     return null;
   }
 };

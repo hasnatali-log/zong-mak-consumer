@@ -1,8 +1,6 @@
 async function checkZongNum(params) {
     try {
         let { cellno: phone } = params;
-        console.log("Original Phone Number: ", phone);
-        console.log("Checking Zong Number: ", phone);
         const response = await fetch(`http://192.168.12.177/provisioning/api/zong-bss/check-subscriber`, {
             method: "post",
             headers: {
@@ -17,7 +15,6 @@ async function checkZongNum(params) {
         });
         const resp = await response.json();
         if (resp?.success) {
-            console.log("Zong User Flow success", phone, resp);
             return {
                 carrier: "zong",
                 success: true,
@@ -40,11 +37,9 @@ async function checkZongNum(params) {
                     msg: "insufficient balance",
                 };
             }
-            console.log("Failure", phone, resp);
             return { carrier: null, msg: resp?.msg };
         }
     } catch (err) {
-        console.log("Error: ", err);
         return { carrier: null };
     }
 }

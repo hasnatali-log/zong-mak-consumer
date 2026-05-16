@@ -21,37 +21,50 @@ const isWeatherSubscriber = async (msisdn) => {
     }
 };
 
-const processBatch = async (batch, batchIndex, totalBatches) => {
-    console.log(`Processing batch ${batchIndex + 1}/${totalBatches} with ${batch.length} rows.`);
+const processBatch = async (batch, batchIndex, totalBatches, startIndex, totalFetched) => {
+    console.log(`Batch ${batchIndex + 1}/${totalBatches}: ${batch.length} rows.`);
 
-    for (const row of batch) {
-        console.log(row, "Processing row", row.id, "with msisdn", row.msisdn);
-        if (row?.msisdn) {
-            const alreadySubscribed = await isWeatherSubscriber(row?.msisdn);
-            if (alreadySubscribed) {
-                console.log(`Skipping row ${row.id}: ${row.msisdn} is already a subscriber in WeatherWalay.`);
-                continue;
-            }
+    let processedInBatch = 0;
+    for (const [rowIndex, row] of batch.entries()) {
+        const currentNumber = startIndex + rowIndex + 1;
 
-            await processProcessorRow(row);
+        if (!row?.msisdn) {
+            console.log(`Skipping row ${row.id || 'unknown'} (${currentNumber}/${totalFetched}): missing msisdn.`);
+            continue;
         }
-        else {
-            console.log(`Skipping row ${row.id}: missing msisdn-->`, row?.msisdn);
+
+        const alreadySubscribed = await isWeatherSubscriber(row.msisdn);
+        if (alreadySubscribed) {
+            console.log(`Skipping row ${row.id} (${currentNumber}/${totalFetched}): already subscribed.`);
+            continue;
         }
+
+        await processProcessorRow(row, currentNumber, totalFetched);
+        processedInBatch += 1;
     }
+
+    return processedInBatch;
 };
 
 const processProcessorRows = async (rows) => {
     if (!Array.isArray(rows) || rows.length === 0) {
         console.log('No processor rows to process.');
-        return;
+        return { totalFetched: 0, totalBatches: 0, totalProcessed: 0 };
     }
 
     const batches = chunkRows(rows, BATCH_SIZE);
+    let totalProcessed = 0;
 
     for (const [batchIndex, batch] of batches.entries()) {
-        await processBatch(batch, batchIndex, batches.length);
+        const startIndex = batchIndex * BATCH_SIZE;
+        totalProcessed += await processBatch(batch, batchIndex, batches.length, startIndex, rows.length);
     }
+
+    return {
+        totalFetched: rows.length,
+        totalBatches: batches.length,
+        totalProcessed,
+    };
 };
 
 module.exports = {

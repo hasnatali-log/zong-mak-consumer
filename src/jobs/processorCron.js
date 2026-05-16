@@ -8,7 +8,7 @@ async function markRowsFetched(ids) {
   const placeholders = ids.map(() => '?').join(', ');
   const updateQuery = `UPDATE processor SET status = 1 WHERE id IN (${placeholders})`;
   await db.execute(updateQuery, ids);
-  console.log(`Marked ${ids.length} processor rows as fetched with status 1.`);
+  console.log(`Marked ${ids.length} rows as fetched.`);
 }
 
 async function fetchProcessorCount() {
@@ -17,15 +17,15 @@ async function fetchProcessorCount() {
     const [rows] = await db.execute(query);
     const count = rows.length;
 
-    console.log('rows', rows);
-    console.log(new Date().toISOString(), 'Processor numbers last hour with status 0:', count);
+    console.log(`Fetched ${count} processor rows.`);
 
     const ids = rows.map((row) => row.id);
     await markRowsFetched(ids);
 
-    await processProcessorRows(rows);
+    const metrics = await processProcessorRows(rows);
+    console.log(`Processing complete: ${metrics.totalProcessed}/${metrics.totalFetched} numbers across ${metrics.totalBatches} batches.`);
   } catch (error) {
-    console.error('Error fetching processor count:', error);
+    console.error('Error fetching processor rows:', error);
   }
 }
 

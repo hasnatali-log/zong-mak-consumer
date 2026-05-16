@@ -1,5 +1,4 @@
 const axios = require("axios");
-const { logger } = require("../../../../logger");
 const { Users } = require("../../../models/ww_db");
 const { alreadySubCheck } = require("../../../services/mongo/alreadySubCheck");
 
@@ -55,12 +54,6 @@ const subscribe_zong_num = async (params) => {
     };
 
     try {
-        logger(
-            `Zong subscription request → ${msisdn} | Package: ${package_type}`,
-            "subscribe_zong_num",
-            payload
-        );
-
         // Check 
         const auser = await alreadySubCheck({ ...params, api: "subscribe" });
         if (auser?.success) {
@@ -76,11 +69,6 @@ const subscribe_zong_num = async (params) => {
         const response = await zongBssApi.post("/subscribe-bundle", payload);
         const data = response.data;
 
-        logger(
-            `Zong subscription success → ${msisdn}`,
-            "subscribe_zong_num",
-            data
-        );
 
         if (data.success === true || data.status === "SUCCESS") {
             // Update MongoDB on successful subscription
@@ -109,10 +97,6 @@ const subscribe_zong_num = async (params) => {
                 },
                 { new: true, upsert: true }
             );
-
-            console.log("Updated User: ", updatedUser?._doc?.phone, updatedUser?._doc?.status);
-
-
 
             if (updatedUser) {
                 updatedUser.log = undefined;
@@ -213,10 +197,6 @@ const subscribe_zong_num = async (params) => {
                 { new: true, upsert: true }
             );
 
-            console.log("Updated User: ", updatedUser?._doc?.phone, updatedUser?._doc?.status);
-
-
-
             if (updatedUser) {
                 updatedUser.log = undefined;
                 updatedUser.billingLogs = undefined;
@@ -256,17 +236,6 @@ const subscribe_zong_num = async (params) => {
             };
         }
         const errDetails = error.response?.data || error.message;
-
-        logger(
-            "Zong subscription failed → " + msisdn,
-            "subscribe_zong_num",
-            {
-                error: errMsg,
-                status: error.response?.status,
-                details: errDetails,
-            },
-            "error"
-        );
 
         return {
             success: false,

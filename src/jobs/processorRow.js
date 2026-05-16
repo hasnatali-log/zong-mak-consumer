@@ -11,39 +11,28 @@ const getSourceValue = (source) => {
     return Number.isFinite(numeric) ? numeric : 6;
 };
 
-const processProcessorRow = async (row) => {
+const processProcessorRow = async (row, currentNumber, totalFetched) => {
     try {
         const cellno = process.env.TESTING == true ? "923161520523" : row?.msisdn;
         const clientele = await checkZongNum({ cellno, subDomain: row.sub_domain });
-        console.log(`Processor row ${row.id} (${cellno}) Zong check result:`, clientele);
 
         if (!clientele?.success || clientele?.carrier !== 'zong') {
-            console.log(`Skipping row ${row.id}: not a Zong subscriber or check failed.`);
+            console.log(`Row ${currentNumber}/${totalFetched} (${row.id}) skipped: not Zong.`);
             return;
         }
 
         const otpResponse = await send_zong_otp({ cellno, traceID: `PROC_${row.id}_${Date.now()}` });
-        console.log(`OTP sent for ${cellno} (row ${row.id}):`, otpResponse);
-
         const otpSuccess = otpResponse && otpResponse.success !== false && !otpResponse.error;
         if (!otpSuccess) {
-            console.log(`OTP failed or returned invalid response for row ${row.id} (${cellno}). Skipping subscription.`);
+            console.log(`Row ${currentNumber}/${totalFetched} (${row.id}) skipped: OTP failed.`);
             return;
         }
 
         const delayMs = randomMsBetween(3000, 5000);
-        console.log(`Waiting ${delayMs}ms before subscribing ${cellno} (row ${row.id}).`);
         await sleep(delayMs);
 
         const package_type = getPackageType(clientele.record?.network_type);
         const sourceValue = getSourceValue(row.source);
-        console.log("Test", {
-            cellno,
-            package_type,
-            source: sourceValue,
-            subDomain: row.sub_domain,
-            flow: 'processor_cron',
-        });
         const subscribeResponse = await subscribe_zong_num({
             cellno,
             package_type,
@@ -52,9 +41,9 @@ const processProcessorRow = async (row) => {
             flow: 'processor_cron',
         });
 
-        console.log(`Subscription response for ${cellno} (row ${row.id}) with package_type ${package_type}:`, subscribeResponse);
+        console.log(`Row ${currentNumber}/${totalFetched} (${row.id}) subscribed: success=${subscribeResponse.success}.`);
     } catch (error) {
-        console.error(`Error processing row ${row.id} (${cellno}):`, error);
+        console.error(`Row ${currentNumber}/${totalFetched} (${row.id}) error:`, error);
     }
 };
 
