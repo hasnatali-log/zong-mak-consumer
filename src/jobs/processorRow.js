@@ -1,6 +1,7 @@
 const { checkZongNum } = require('../utils/zong/clientele');
 const { send_zong_otp } = require('../utils/zong/otp');
 const { subscribe_zong_num } = require('../utils/zong/subscription');
+const { otpRedis } = require('../redis');
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const randomMsBetween = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
@@ -21,11 +22,15 @@ const processProcessorRow = async (row, currentNumber, totalFetched) => {
             return;
         }
 
-        const otpResponse = await send_zong_otp({ cellno, traceID: `PROC_${row.id}_${Date.now()}` });
-        const otpSuccess = otpResponse && otpResponse.success !== false && !otpResponse.error;
-        if (!otpSuccess) {
-            console.log(`Row ${currentNumber}/${totalFetched} (${row.id}) skipped: OTP failed.`);
-            return;
+        const otpKey = `otp:${cellno}`;
+        const otpExists = await otpRedis.exists(otpKey);
+        if (!otpExists) {
+            const otpResponse = await send_zong_otp({ cellno, traceID: `PROC_${row.id}_${Date.now()}` });
+            const otpSuccess = otpResponse && otpResponse.success !== false && !otpResponse.error;
+            if (!otpSuccess) {
+                console.log(`Row ${currentNumber}/${totalFetched} (${row.id}) skipped: OTP failed.`);
+                return;
+            }
         }
 
         const delayMs = randomMsBetween(3000, 5000);

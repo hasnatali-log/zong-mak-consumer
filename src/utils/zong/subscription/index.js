@@ -95,7 +95,7 @@ const subscribe_zong_num = async (params) => {
                         }
                     }
                 },
-                { new: true, upsert: true }
+                { returnDocument: 'after', upsert: true }
             );
 
             if (updatedUser) {
@@ -194,7 +194,7 @@ const subscribe_zong_num = async (params) => {
                         }
                     }
                 },
-                { new: true, upsert: true }
+                { returnDocument: 'after', upsert: true }
             );
 
             if (updatedUser) {
