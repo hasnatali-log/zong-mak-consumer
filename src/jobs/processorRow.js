@@ -20,7 +20,7 @@ const processProcessorRow = async (row, currentNumber, totalFetched) => {
 
         if (!clientele?.success || clientele?.carrier !== 'zong') {
             console.log(`Row ${currentNumber}/${totalFetched} (${row.id}) skipped: not Zong.`);
-            return;
+            return 'not_zong';
         }
 
         const otpKey = `${cellno}`;
@@ -32,7 +32,7 @@ const processProcessorRow = async (row, currentNumber, totalFetched) => {
             const otpSuccess = otpResponse && otpResponse.success !== false && !otpResponse.error;
             if (!otpSuccess) {
                 console.log(`Row ${currentNumber}/${totalFetched} (${row.id}) skipped: OTP failed.`);
-                return;
+                return 'otp_failed';
             }
         }
 
@@ -50,8 +50,10 @@ const processProcessorRow = async (row, currentNumber, totalFetched) => {
         });
 
         console.log(`Row ${currentNumber}/${totalFetched} (${row.id}) subscribed: success=${subscribeResponse.success}.`);
+        return subscribeResponse.success ? 'subscribed' : 'sub_failed';
     } catch (error) {
         console.error(`Row ${currentNumber}/${totalFetched} (${row.id}) error:`, error);
+        return 'error';
     }
 };
 

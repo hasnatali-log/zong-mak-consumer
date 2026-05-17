@@ -23,7 +23,13 @@ async function fetchProcessorCount() {
     await markRowsFetched(ids);
 
     const metrics = await processProcessorRows(rows);
-    console.log(`Processing complete: ${metrics.totalProcessed}/${metrics.totalFetched} numbers across ${metrics.totalBatches} batches.`);
+    const o = metrics.outcomes;
+    console.log(
+        `Processing complete: ${metrics.totalFetched} fetched across ${metrics.totalBatches} batches — ` +
+        `subscribed=${o.subscribed}, sub_failed=${o.sub_failed}, ` +
+        `not_zong=${o.not_zong}, otp_failed=${o.otp_failed}, ` +
+        `already_subscribed=${o.already_subscribed}, no_msisdn=${o.no_msisdn}, error=${o.error}`
+    );
   } catch (error) {
     console.error('Error fetching processor rows:', error);
   }
