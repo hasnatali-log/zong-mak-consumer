@@ -1,6 +1,8 @@
 async function checkZongNum(params) {
     try {
         let { cellno: phone } = params;
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 10000);
         const response = await fetch(`http://192.168.12.177/provisioning/api/zong-bss/check-subscriber`, {
             method: "post",
             headers: {
@@ -10,9 +12,10 @@ async function checkZongNum(params) {
             body: JSON.stringify({
                 userNumber: phone,
                 checkBalance: false
-                // traceID
             }),
+            signal: controller.signal,
         });
+        clearTimeout(timer);
         const resp = await response.json();
         if (resp?.success) {
             return {

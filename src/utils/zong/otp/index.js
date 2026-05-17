@@ -15,7 +15,7 @@ const send_zong_otp = async (ata) => {
         };
 
         // Make GET request
-        const response = await axios.get(url, { params });
+        const response = await axios.get(url, { params, timeout: 10000 });
 
         response.data.traceID = traceID;
         return response.data; // Return OTP response
