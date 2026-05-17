@@ -1,3 +1,18 @@
+
+const { checkZongNum } = require('../utils/zong/clientele');
+const { send_zong_otp } = require('../utils/zong/otp');
+const { subscribe_zong_num } = require('../utils/zong/subscription');
+const { otpRedis } = require('../redis');
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const randomMsBetween = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+const getPackageType = (networkType) => (networkType === 'postpaid' ? 3 : 1);
+const getSourceValue = (source) => {
+    const numeric = Number(source);
+    return Number.isFinite(numeric) ? numeric : 6;
+};
+
 const processProcessorRow = async (row, currentNumber, totalFetched) => {
     try {
         const cellno = process.env.TESTING == true ? "923161520523" : row?.msisdn;
