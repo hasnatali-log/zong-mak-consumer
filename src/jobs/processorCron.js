@@ -25,10 +25,10 @@ async function fetchProcessorCount() {
     const metrics = await processProcessorRows(rows);
     const o = metrics.outcomes;
     console.log(
-        `Processing complete: ${metrics.totalFetched} fetched across ${metrics.totalBatches} batches — ` +
-        `subscribed=${o.subscribed}, sub_failed=${o.sub_failed}, ` +
-        `not_zong=${o.not_zong}, otp_failed=${o.otp_failed}, ` +
-        `already_subscribed=${o.already_subscribed}, no_msisdn=${o.no_msisdn}, error=${o.error}`
+      `Processing complete: ${metrics.totalFetched} fetched across ${metrics.totalBatches} batches — ` +
+      `subscribed=${o.subscribed}, sub_failed=${o.sub_failed}, ` +
+      `not_zong=${o.not_zong}, otp_failed=${o.otp_failed}, ` +
+      `already_subscribed=${o.already_subscribed}, no_msisdn=${o.no_msisdn}, error=${o.error}`
     );
   } catch (error) {
     console.error('Error fetching processor rows:', error);
@@ -38,12 +38,12 @@ async function fetchProcessorCount() {
 async function startProcessorCron() {
   // await fetchProcessorCount();
   // run at minute 0 of every hour
-  cron.schedule('33 * * * *', async () => {
+  cron.schedule('45 * * * *', async () => {
     console.log(new Date().toISOString(), 'Running hourly processor cron job');
     await fetchProcessorCount();
   });
 
-  console.log('Processor cron scheduled: 34 * * * *');
+  console.log('Processor cron scheduled: 45 * * * *');
 }
 
 if (require.main === module) {
