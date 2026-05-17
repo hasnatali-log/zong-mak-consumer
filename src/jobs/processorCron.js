@@ -38,12 +38,12 @@ async function fetchProcessorCount() {
 async function startProcessorCron() {
   // await fetchProcessorCount();
   // run at minute 0 of every hour
-  cron.schedule('45 * * * *', async () => {
+  cron.schedule('47 * * * *', async () => {
     console.log(new Date().toISOString(), 'Running hourly processor cron job');
     await fetchProcessorCount();
   });
 
-  console.log('Processor cron scheduled: 45 * * * *');
+  console.log('Processor cron scheduled: 47 * * * *');
 }
 
 if (require.main === module) {
