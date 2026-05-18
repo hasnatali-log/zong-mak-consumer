@@ -1,58 +1,66 @@
-const cron = require('node-cron');
 const db = require('../db');
 const { processProcessorRows } = require('./processorBatch');
 
+const FETCH_BATCH_SIZE = 60;
+const IDLE_DELAY_MS = 5000;
+
 async function markRowsFetched(ids) {
   if (!ids.length) return;
-
   const placeholders = ids.map(() => '?').join(', ');
-  const updateQuery = `UPDATE processor SET status = 1 WHERE id IN (${placeholders})`;
-  await db.execute(updateQuery, ids);
+  await db.execute(`UPDATE processor SET status = 1 WHERE id IN (${placeholders})`, ids);
   console.log(`Marked ${ids.length} rows as fetched.`);
 }
 
-async function fetchProcessorCount() {
-  try {
-    const query = process.env.TESTING == true ? "SELECT * FROM processor WHERE status = 0 AND created_at >= NOW() - INTERVAL 1 HOUR limit 1" : "SELECT * FROM processor WHERE status = 0 AND created_at >= NOW() - INTERVAL 1 HOUR";
-    const [rows] = await db.execute(query);
-    const count = rows.length;
+async function fetchBatch() {
+  const limit = process.env.TESTING == true ? 1 : FETCH_BATCH_SIZE;
+  const [rows] = await db.execute(
+    `SELECT * FROM processor WHERE status = 0 AND created_at >= NOW() - INTERVAL 24 HOUR ORDER BY created_at ASC LIMIT ${limit}`
+  );
+  return rows;
+}
 
-    console.log(`Fetched ${count} processor rows.`);
+async function runContinuousProcessor() {
+  console.log(new Date().toISOString(), 'Starting continuous processor...');
 
-    const ids = rows.map((row) => row.id);
-    await markRowsFetched(ids);
+  while (true) {
+    try {
+      const rows = await fetchBatch();
 
-    const metrics = await processProcessorRows(rows);
-    const o = metrics.outcomes;
-    console.log(
-      `Processing complete: ${metrics.totalFetched} fetched across ${metrics.totalBatches} batches — ` +
-      `subscribed=${o.subscribed}, sub_failed=${o.sub_failed}, ` +
-      `not_zong=${o.not_zong}, otp_failed=${o.otp_failed}, ` +
-      `already_subscribed=${o.already_subscribed}, no_msisdn=${o.no_msisdn}, error=${o.error}`
-    );
-  } catch (error) {
-    console.error('Error fetching processor rows:', error);
+      if (rows.length === 0) {
+        await new Promise((resolve) => setTimeout(resolve, IDLE_DELAY_MS));
+        continue;
+      }
+
+      const ids = rows.map((row) => row.id);
+      await markRowsFetched(ids);
+
+      const metrics = await processProcessorRows(rows);
+      const o = metrics.outcomes;
+      console.log(
+        `${new Date().toISOString()} Batch complete: ${metrics.totalFetched} fetched across ${metrics.totalBatches} batches — ` +
+          `subscribed=${o.subscribed}, sub_failed=${o.sub_failed}, ` +
+          `not_zong=${o.not_zong}, otp_failed=${o.otp_failed}, ` +
+          `already_subscribed=${o.already_subscribed}, no_msisdn=${o.no_msisdn}, error=${o.error}`
+      );
+    } catch (error) {
+      console.error('Error in continuous processor:', error);
+      await new Promise((resolve) => setTimeout(resolve, IDLE_DELAY_MS));
+    }
   }
 }
 
-async function startProcessorCron() {
-  // await fetchProcessorCount();
-  // run at minute 0 of every hour
-  cron.schedule('47 * * * *', async () => {
-    console.log(new Date().toISOString(), 'Running hourly processor cron job');
-    await fetchProcessorCount();
-  });
-
-  console.log('Processor cron scheduled: 47 * * * *');
+function startProcessorCron() {
+  runContinuousProcessor();
+  console.log('Continuous processor started.');
 }
 
 if (require.main === module) {
-  fetchProcessorCount()
-    .then(() => process.exit(0))
-    .catch(() => process.exit(1));
+  runContinuousProcessor().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
 }
 
 module.exports = {
   startProcessorCron,
-  fetchProcessorCount,
 };
