@@ -11,6 +11,38 @@ const zongBssApi = axios.create({
     },
 });
 
+const _persistSubscription = async ({ phone, package_type, source, subMode, auser }) => {
+    try {
+        await Users.findOneAndUpdate(
+            { phone },
+            {
+                fcm: auser ? auser.fcm : [],
+                carrier: "zong",
+                network_type: package_type,
+                phone,
+                is_pkg_chng: false,
+                regDate: new Date(),
+                package_type,
+                status: "premium",
+                source,
+                under_process: false,
+                subMode,
+                $push: {
+                    logs: {
+                        status: "premium",
+                        date: new Date(),
+                        mode: source,
+                        carrier: "zong"
+                    }
+                }
+            },
+            { upsert: true }
+        );
+    } catch (err) {
+        console.error("[_persistSubscription] MongoDB update failed for", phone, err.message);
+    }
+};
+
 const subscribe_zong_num = async (params) => {
     let {
         cellno,
@@ -54,7 +86,6 @@ const subscribe_zong_num = async (params) => {
     };
 
     try {
-        // Check 
         const auser = await alreadySubCheck({ ...params, api: "subscribe" });
         if (auser?.success) {
             if (auser?.under_process)
@@ -65,75 +96,26 @@ const subscribe_zong_num = async (params) => {
                 };
         }
 
-
         const response = await zongBssApi.post("/subscribe-bundle", payload);
         const data = response.data;
 
-
         if (data.success === true || data.status === "SUCCESS") {
-            // Update MongoDB on successful subscription
-            const updatedUser = await Users.findOneAndUpdate(
-                { phone },
-                {
-                    fcm: auser ? auser.fcm : [],
-                    carrier: "zong",
-                    network_type: package_type,
-                    phone,
-                    is_pkg_chng: false,
-                    regDate: new Date(),
-                    package_type: package_type,
-                    status: "premium",
-                    source,
-                    under_process: false,
-                    subMode: subMode,
-                    $push: {
-                        logs: {
-                            status: "premium",
-                            date: new Date(),
-                            mode: source,
-                            carrier: "zong"
-                        }
-                    }
-                },
-                { returnDocument: 'after', upsert: true }
-            );
+            // Return immediately, then persist to MongoDB in the background
+            const result = {
+                success: true,
+                msg: data.message || "Subscription successful",
+                record: { phone, redirect: true },
+                msisdn,
+            };
 
-            if (updatedUser) {
-                updatedUser.log = undefined;
-                updatedUser.billingLogs = undefined;
-                updatedUser.quickNotifications = undefined;
-                updatedUser.favouriteLocations = undefined;
-                updatedUser.profession = undefined;
+            _persistSubscription({ phone, package_type, source, subMode, auser });
 
-                return {
-                    success: true,
-                    msg: data.message || "Subscription successful",
-                    record: { ...updatedUser._doc, redirect: true },
-                    msisdn,
-                };
-            } else {
-                return {
-                    success: false,
-                    msg: "Unable to update user record",
-                    record: data,
-                    msisdn,
-                };
-            }
+            return result;
         }
 
         // Treat "already subscribed" as success
-        const msgLower = (
-            data.msg ||
-            data.message ||
-            data.error ||
-            ""
-        ).toLowerCase();
-        if (
-            msgLower.includes("already subscribed") ||
-            msgLower.includes("already active")
-        ) {
-
-
+        const msgLower = (data.msg || data.message || data.error || "").toLowerCase();
+        if (msgLower.includes("already subscribed") || msgLower.includes("already active")) {
             return {
                 success: true,
                 alreadySubscribed: true,
@@ -142,8 +124,6 @@ const subscribe_zong_num = async (params) => {
                 msisdn,
             };
         }
-
-
 
         return {
             success: false,
@@ -170,77 +150,33 @@ const subscribe_zong_num = async (params) => {
                     };
             }
 
-            // Update MongoDB on successful subscription
-            const updatedUser = await Users.findOneAndUpdate(
-                { phone },
-                {
-                    fcm: auser ? auser.fcm : [],
-                    carrier: "zong",
-                    network_type: package_type,
-                    phone,
-                    is_pkg_chng: false,
-                    regDate: new Date(),
-                    package_type: package_type,
-                    status: "premium",
-                    source,
-                    under_process: false,
-                    subMode: subMode,
-                    $push: {
-                        logs: {
-                            status: "premium",
-                            date: new Date(),
-                            mode: source,
-                            carrier: "zong"
-                        }
-                    }
-                },
-                { returnDocument: 'after', upsert: true }
-            );
+            // Return immediately, then persist to MongoDB in the background
+            const result = {
+                success: true,
+                msg: "Subscription successful",
+                record: { phone, redirect: true },
+                msisdn,
+            };
 
-            if (updatedUser) {
-                updatedUser.log = undefined;
-                updatedUser.billingLogs = undefined;
-                updatedUser.quickNotifications = undefined;
-                updatedUser.favouriteLocations = undefined;
-                updatedUser.profession = undefined;
+            _persistSubscription({ phone, package_type, source, subMode, auser });
 
-                return {
-                    success: true,
-                    msg: data?.message || "Subscription successful",
-                    record: { ...updatedUser._doc, redirect: true },
-                    msisdn,
-                };
-            } else {
-                return {
-                    success: false,
-                    msg: "Unable to update user record",
-                    record: data,
-                    msisdn,
-                };
-            }
-
+            return result;
         }
 
-
-
-        if (
-            errMsg.includes("already subscribed") ||
-            errMsg.includes("already active")
-        ) {
+        if (errMsg.includes("already subscribed") || errMsg.includes("already active")) {
             return {
                 success: true,
                 alreadySubscribed: true,
                 msg: "Already subscribed",
-                record: error.response?.data.record || null,
+                record: error.response?.data?.record || null,
                 msisdn,
             };
         }
-        const errDetails = error.response?.data || error.message;
 
         return {
             success: false,
             msg: errMsg,
-            record: errDetails,
+            record: error.response?.data || error.message,
             msisdn,
         };
     }

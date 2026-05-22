@@ -1,7 +1,7 @@
 const { processProcessorRow } = require('./processorRow');
 const { weatherPool } = require('../db');
 
-const BATCH_SIZE = 60;
+const BATCH_SIZE = 100;
 
 const chunkRows = (rows, size) => {
     const chunks = [];
