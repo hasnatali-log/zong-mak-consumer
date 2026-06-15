@@ -11,6 +11,13 @@ async function markRowsFetched(ids) {
   console.log(`Marked ${ids.length} rows as fetched.`);
 }
 
+async function countPendingRows() {
+  const [[{ count }]] = await db.execute(
+    `SELECT COUNT(*) AS count FROM processor WHERE status = 0 AND created_at >= NOW() - INTERVAL 24 HOUR`
+  );
+  return Number(count);
+}
+
 async function fetchBatch() {
   const limit = process.env.TESTING == true ? 1 : FETCH_BATCH_SIZE;
   const [rows] = await db.execute(
@@ -19,11 +26,21 @@ async function fetchBatch() {
   return rows;
 }
 
+const MIN_PENDING_TO_START = 180;
+
 async function runContinuousProcessor() {
   console.log(new Date().toISOString(), 'Starting continuous processor...');
 
   while (true) {
     try {
+      const pending = await countPendingRows();
+
+      if (pending < MIN_PENDING_TO_START) {
+        console.log(`${new Date().toISOString()} Waiting — only ${pending} pending rows (need ${MIN_PENDING_TO_START}).`);
+        await new Promise((resolve) => setTimeout(resolve, IDLE_DELAY_MS));
+        continue;
+      }
+
       const rows = await fetchBatch();
 
       if (rows.length === 0) {
